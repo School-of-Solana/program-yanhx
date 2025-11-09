@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { PublicKey } from '@solana/web3.js'
 import { BN } from '@coral-xyz/anchor'
-import { useWallet, useConnection } from '@solana/wallet-adapter-react'
+import { useWallet } from '@solana/wallet-adapter-react'
 import { getAssociatedTokenAddress } from '@solana/spl-token'
 import { useMerkleDistributorProgram, getConfigPDA, getClaimedRewardsPDA } from '@/lib/program'
 import { getProofForClaimant, Leaf } from '@/lib/merkle-utils'
@@ -16,7 +16,6 @@ import { toast } from 'sonner'
 
 export function ClaimTokens() {
   const { publicKey } = useWallet()
-  const { connection } = useConnection()
   const { program } = useMerkleDistributorProgram()
   const queryClient = useQueryClient()
   const [claimantAddress, setClaimantAddress] = useState('')
@@ -30,13 +29,15 @@ export function ClaimTokens() {
     queryFn: async () => {
       if (!program) throw new Error('Program not initialized')
       try {
+        // @ts-expect-error - Anchor IDL types are dynamic
         const account = await program.account.distributorConfig.fetch(configPDA)
         return {
           mint: account.mint.toString(),
           shutdown: account.shutdown,
         }
-      } catch (err: any) {
-        if (err.message?.includes('Account does not exist')) {
+      } catch (err: unknown) {
+        const error = err instanceof Error ? err : new Error(String(err))
+        if (error.message?.includes('Account does not exist')) {
           return null
         }
         throw err
@@ -64,9 +65,10 @@ export function ClaimTokens() {
     onSuccess: () => {
       toast.success('Leaf added to list')
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       toast.error('Failed to add leaf', {
-        description: error.message,
+        description: errorMessage,
       })
     },
   })
@@ -124,9 +126,10 @@ export function ClaimTokens() {
       queryClient.invalidateQueries({ queryKey: ['distributor-config'] })
       queryClient.invalidateQueries({ queryKey: ['vault-balance'] })
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       toast.error('Failed to claim tokens', {
-        description: error.message,
+        description: errorMessage,
       })
     },
   })

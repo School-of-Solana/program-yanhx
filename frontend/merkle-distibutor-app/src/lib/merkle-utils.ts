@@ -1,5 +1,4 @@
 import { PublicKey } from '@solana/web3.js'
-// @ts-ignore - Anchor types may not be available during build
 import { BN } from '@coral-xyz/anchor'
 import { sha256 } from 'js-sha256'
 

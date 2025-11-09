@@ -14,12 +14,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 
 export function InitializeDistributor() {
-  const { publicKey, signTransaction } = useWallet()
+  const { publicKey } = useWallet()
   const { connection } = useConnection()
   const { program, isLoading: programLoading, error: programError } = useMerkleDistributorProgram()
   const queryClient = useQueryClient()
   const [mintAddress, setMintAddress] = useState(DEPLOYMENT_CONFIG.MINT_ADDRESS.toString())
-  const [isLoading, setIsLoading] = useState(false)
 
   const [configPDA] = getConfigPDA()
 
@@ -52,10 +51,11 @@ export function InitializeDistributor() {
         if (accountInfo) {
           programData = programDataAddress
         }
-      } catch (err) {
+      } catch {
         // Program data doesn't exist, that's okay
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const accounts: any = {
         config: configPDA,
         mint: mint,
@@ -82,9 +82,10 @@ export function InitializeDistributor() {
       queryClient.invalidateQueries({ queryKey: ['distributor-config'] })
       setMintAddress('')
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       toast.error('Failed to initialize distributor', {
-        description: error.message,
+        description: errorMessage,
       })
     },
   })

@@ -19,6 +19,7 @@ export function DistributorStatus() {
     queryFn: async () => {
       if (!program) throw new Error('Program not initialized')
       try {
+        // @ts-expect-error - Anchor IDL types are dynamic
         const account = await program.account.distributorConfig.fetch(configPDA)
         return {
           bump: account.bump,
@@ -28,8 +29,9 @@ export function DistributorStatus() {
           admin: account.admin.toString(),
           shutdown: account.shutdown,
         }
-      } catch (err: any) {
-        if (err.message?.includes('Account does not exist')) {
+      } catch (err: unknown) {
+        const error = err instanceof Error ? err : new Error(String(err))
+        if (error.message?.includes('Account does not exist')) {
           return null
         }
         throw err

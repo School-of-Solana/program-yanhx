@@ -42,9 +42,10 @@ export function UpdateRoot() {
     onSuccess: () => {
       toast.success('Leaf added to list')
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       toast.error('Failed to add leaf', {
-        description: error.message,
+        description: errorMessage,
       })
     },
   })
@@ -67,6 +68,7 @@ export function UpdateRoot() {
         .accounts({
           config: configPDA,
           admin: publicKey,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any)
         .rpc()
 
@@ -79,9 +81,10 @@ export function UpdateRoot() {
       queryClient.invalidateQueries({ queryKey: ['distributor-config'] })
       setLeaves([])
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
+      const errorMessage = error instanceof Error ? error.message : String(error)
       toast.error('Failed to update root', {
-        description: error.message,
+        description: errorMessage,
       })
     },
   })

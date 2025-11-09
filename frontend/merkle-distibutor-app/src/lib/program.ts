@@ -1,7 +1,7 @@
 'use client'
 
 import { Program, AnchorProvider, Idl } from '@coral-xyz/anchor'
-import { Connection, PublicKey } from '@solana/web3.js'
+import { PublicKey } from '@solana/web3.js'
 import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 import { useState, useEffect } from 'react'
 
@@ -36,6 +36,7 @@ async function loadIdl(): Promise<Idl | null> {
 /**
  * Process IDL to ensure correct format for Anchor
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function processIdl(jsonData: any): Idl | null {
   if (!jsonData || Object.keys(jsonData).length === 0) {
     console.error('IDL JSON is empty or not loaded correctly')
@@ -46,6 +47,7 @@ function processIdl(jsonData: any): Idl | null {
   
   // In Anchor 0.31.0+, the address field is required in the IDL
   // The Program constructor infers programId from IDL.address
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const processedIdl: any = {
     ...rest,
     address: address || MERKLE_DISTRIBUTOR_PROGRAM_ID.toString()
@@ -57,18 +59,22 @@ function processIdl(jsonData: any): Idl | null {
   }
 
   // Process instructions to clean account addresses
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const processedInstructions = (rest.instructions || []).map((instruction: any) => {
     if (!instruction.accounts) return instruction
     
     return {
       ...instruction,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       accounts: instruction.accounts.map((account: any) => cleanAccount(account, instruction.name))
     }
   })
 
   // Process accounts - ensure each account has a type field
   // This is critical for Anchor to calculate account sizes
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const processedAccounts = (rest.accounts || []).map((account: any) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const processed: any = { name: account.name }
     if (account.discriminator) processed.discriminator = account.discriminator
     
@@ -77,6 +83,7 @@ function processIdl(jsonData: any): Idl | null {
       processed.type = account.type
     } else {
       // Try to find type from types array
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const accountType = (rest.types || []).find((t: any) => t.name === account.name)
       if (accountType?.type) {
         processed.type = accountType.type
@@ -85,6 +92,7 @@ function processIdl(jsonData: any): Idl | null {
     return processed
   })
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const idl: any = {
     address: address || MERKLE_DISTRIBUTOR_PROGRAM_ID.toString(), // Required in Anchor 0.31.0+
     version: metadata?.version || '0.1.0',
@@ -101,6 +109,7 @@ function processIdl(jsonData: any): Idl | null {
 /**
  * Clean IDL accounts to ensure proper format
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function cleanIdlAccounts(idl: any): any {
   if (!idl || !idl.instructions) return idl
 
@@ -114,7 +123,9 @@ function cleanIdlAccounts(idl: any): any {
   // Ensure accounts array has type fields - critical for Anchor to calculate account sizes
   if (cleaned.accounts && Array.isArray(cleaned.accounts) && cleaned.accounts.length > 0) {
     // Process existing accounts array
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     cleaned.accounts = cleaned.accounts.map((account: any) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const processed: any = { name: account.name }
       if (account.discriminator) processed.discriminator = account.discriminator
       
@@ -124,6 +135,7 @@ function cleanIdlAccounts(idl: any): any {
         processed.type = JSON.parse(JSON.stringify(account.type))
       } else {
         // Try to find type from types array
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const accountType = (cleaned.types || []).find((t: any) => t.name === account.name)
         if (accountType?.type && accountType.type.kind) {
           // Copy the entire type object from types array
@@ -135,8 +147,11 @@ function cleanIdlAccounts(idl: any): any {
   } else if (!cleaned.accounts || (Array.isArray(cleaned.accounts) && cleaned.accounts.length === 0)) {
     // If accounts array is missing or empty, create it from types array
     if (cleaned.types && Array.isArray(cleaned.types)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       cleaned.accounts = cleaned.types
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((t: any) => t.type?.kind === 'struct') // Only struct types are accounts
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((t: any) => ({
           name: t.name,
           type: JSON.parse(JSON.stringify(t.type)), // Deep copy the type object
@@ -145,9 +160,11 @@ function cleanIdlAccounts(idl: any): any {
     }
   }
   
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cleaned.instructions = cleaned.instructions.map((instruction: any) => {
     if (!instruction.accounts) return instruction
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cleanedAccounts = instruction.accounts.map((account: any) => cleanAccount(account, instruction.name || 'unknown'))
     
     return {
@@ -162,7 +179,9 @@ function cleanIdlAccounts(idl: any): any {
 /**
  * Clean a single account object
  */
-function cleanAccount(account: any, instructionName: string): any {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+function cleanAccount(account: any, _instructionName: string): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const clean: any = { name: account.name }
   
   // Copy valid boolean fields
@@ -192,7 +211,7 @@ function cleanAccount(account: any, instructionName: string): any {
         // Validate it's a valid PublicKey
         new PublicKey(account.address)
         clean.address = account.address
-      } catch (e) {
+      } catch {
         // Invalid address - do NOT include it
       }
     } else if (Array.isArray(account.address) && account.address.length > 0) {
@@ -200,7 +219,7 @@ function cleanAccount(account: any, instructionName: string): any {
         const addressBytes = new Uint8Array(account.address)
         const addressPubkey = new PublicKey(addressBytes)
         clean.address = addressPubkey.toString()
-      } catch (e) {
+      } catch {
         // Invalid address - do NOT include it
       }
     }
@@ -218,10 +237,10 @@ function createProgramInstance(idl: Idl, provider: AnchorProvider): Program<Idl>
     // In Anchor 0.31.0+, the Program constructor format changed:
     // new Program<MyProgram>(idl, provider) instead of new Program(idl, programId, provider)
     // The programId is now inferred from the IDL's address field
-    // @ts-ignore - Anchor Program constructor type definition issue
     return new Program(idl, provider)
-  } catch (error: any) {
-    console.error('Failed to create Program:', error?.message || error)
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    console.error('Failed to create Program:', errorMessage)
     return null
   }
 }
@@ -265,6 +284,7 @@ export function useMerkleDistributorProgram() {
 
     const provider = new AnchorProvider(
       connection,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       wallet as any,
       AnchorProvider.defaultOptions()
     )

@@ -19,13 +19,15 @@ export function MerkleDistributorFeature() {
     queryFn: async () => {
       if (!program) return null
       try {
+        // @ts-expect-error - Anchor IDL types are dynamic
         const account = await program.account.distributorConfig.fetch(configPDA)
         return {
           admin: account.admin.toString(),
           shutdown: account.shutdown,
         }
-      } catch (err: any) {
-        if (err.message?.includes('Account does not exist')) {
+      } catch (err: unknown) {
+        const error = err instanceof Error ? err : new Error(String(err))
+        if (error.message?.includes('Account does not exist')) {
           return null
         }
         throw err
