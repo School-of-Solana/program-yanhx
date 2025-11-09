@@ -1,6 +1,6 @@
 # Project Description
 
-**Deployed Frontend URL:** [TODO: Link to your deployed frontend - Currently running locally at http://localhost:3000]
+**Deployed Frontend URL:** https://merkle-distibutor-app-yanhx-ryans-projects-1bd7cdbd.vercel.app/
 
 **Solana Program ID:** `8LxW6m2hQymvR5hxvDC68P6Qfk5muvFv7ttnDgYSQGzb`
 
